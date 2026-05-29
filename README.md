@@ -93,8 +93,7 @@ src/
 **Design decisions worth noting**
 
 - **Zero-dependency generation**: the copy engine runs in-process, so the app is
-  free to host anywhere and never shows a broken screen — ideal for a live
-  portfolio link.
+  free to host anywhere, has no external points of failure, and works offline.
 - **LLM-swappable by design**: `lib/ai.ts` exposes the same async `generateCopy`
   contract an LLM would. Dropping in a hosted model later is a single-file change;
   the UI and API route stay untouched.
@@ -159,5 +158,5 @@ MIT — free to use, learn from, and build on.
 ---
 
 <div align="center">
-Built by <b>Marawan Elsafty</b> · Frontend & Fullstack Developer
+Contributions, issues, and feature requests are welcome.
 </div>
