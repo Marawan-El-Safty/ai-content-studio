@@ -20,13 +20,14 @@ and Tailwind CSS. **Runs 100% free — no API key, no billing, no signup.**
 
 ## 📸 Screenshots
 
-> _Add screenshots / a GIF here after deploying — drop them in `public/` and
-> reference them below. Suggested shots: landing hero, the Studio generating
-> copy, and the content Library._
+### Landing
+![Landing page](docs/landing.png)
 
-| Landing | Studio | Library |
-| :-----: | :----: | :-----: |
-| `docs/landing.png` | `docs/studio.png` | `docs/library.png` |
+### Studio — generate on-brand copy
+![Studio](docs/studio.png)
+
+### Library — save & organize
+![Library](docs/library.png)
 
 ---
 
