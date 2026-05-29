@@ -1,4 +1,3 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { getContentType, type Length, type Tone } from "./content-types";
 
 export interface GenerateParams {
@@ -15,8 +14,11 @@ const LENGTH_HINT: Record<Length, string> = {
   Long: "Be thorough and expansive while staying engaging.",
 };
 
-export function isClaudeConfigured() {
-  return Boolean(process.env.ANTHROPIC_API_KEY);
+/** Free Google Gemini model — no billing required on the free tier. */
+const DEFAULT_MODEL = "gemini-2.0-flash";
+
+export function isAiConfigured() {
+  return Boolean(process.env.GEMINI_API_KEY);
 }
 
 function buildPrompt(p: GenerateParams) {
@@ -50,30 +52,40 @@ function parseVariations(raw: string, fallbackCount: number): string[] {
 }
 
 /**
- * Generate marketing copy. Falls back to high-quality mock output when
- * no API key is present so the app stays fully demoable.
+ * Generate marketing copy with Google Gemini (free tier). Falls back to
+ * high-quality mock output when no API key is present so the app stays
+ * fully demoable with zero configuration.
  */
 export async function generateCopy(p: GenerateParams): Promise<{
   variations: string[];
   demo: boolean;
 }> {
-  if (!isClaudeConfigured()) {
+  if (!isAiConfigured()) {
     return { variations: mockVariations(p), demo: true };
   }
 
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  const model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
+  const model = process.env.GEMINI_MODEL || DEFAULT_MODEL;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
-  const msg = await client.messages.create({
-    model,
-    max_tokens: 1500,
-    messages: [{ role: "user", content: buildPrompt(p) }],
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: buildPrompt(p) }] }],
+      generationConfig: { temperature: 0.9, maxOutputTokens: 1500 },
+    }),
   });
 
-  const raw = msg.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("\n");
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Gemini API error ${res.status}: ${detail.slice(0, 300)}`);
+  }
+
+  const data = await res.json();
+  const raw: string =
+    data?.candidates?.[0]?.content?.parts
+      ?.map((part: { text?: string }) => part.text ?? "")
+      .join("") ?? "";
 
   return { variations: parseVariations(raw, p.variations), demo: false };
 }
@@ -89,6 +101,6 @@ function mockVariations(p: GenerateParams): string[] {
   ];
   return base.slice(0, Math.max(1, p.variations)).map(
     (line) =>
-      `${line}\n\n[Demo mode — add your ANTHROPIC_API_KEY in .env.local for real ${p.tone.toLowerCase()} ${type.label.toLowerCase()}.]`,
+      `${line}\n\n[Demo mode — add your free GEMINI_API_KEY in .env.local for real ${p.tone.toLowerCase()} ${type.label.toLowerCase()}.]`,
   );
 }

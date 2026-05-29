@@ -9,8 +9,8 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 export const metadata: Metadata = {
   title: "AI Content Studio — Generate premium marketing copy",
   description:
-    "Generate, refine, and organize high-converting marketing copy with Claude. Ad copy, emails, landing pages, social posts and more.",
-  keywords: ["AI copywriting", "marketing copy", "Claude", "content generator"],
+    "Generate, refine, and organize high-converting marketing copy with AI. Ad copy, emails, landing pages, social posts and more.",
+  keywords: ["AI copywriting", "marketing copy", "Gemini", "content generator"],
   authors: [{ name: "Marawan Elsafty" }],
   openGraph: {
     title: "AI Content Studio",

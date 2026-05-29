@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateCopy } from "@/lib/claude";
+import { generateCopy } from "@/lib/ai";
 import { CONTENT_TYPES, LENGTHS, TONES } from "@/lib/content-types";
 
 export const runtime = "nodejs";

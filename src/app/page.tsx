@@ -50,7 +50,7 @@ export default function Home() {
           <Reveal>
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-4 py-1.5 text-sm text-muted-foreground backdrop-blur">
               <Sparkles className="size-3.5 text-primary" />
-              Powered by Claude
+              Powered by AI
             </span>
           </Reveal>
 
@@ -148,7 +148,7 @@ export default function Home() {
 
       <footer className="border-t border-border">
         <div className="container flex flex-col items-center justify-between gap-2 py-8 text-sm text-muted-foreground sm:flex-row">
-          <p>Built with Next.js, Tailwind & Claude.</p>
+          <p>Built with Next.js, Tailwind & Gemini.</p>
           <p>© {new Date().getFullYear()} AI Content Studio</p>
         </div>
       </footer>

@@ -2,17 +2,17 @@
 
 # ✨ AI Content Studio
 
-**Generate, refine, and organize premium marketing copy with Claude.**
+**Generate, refine, and organize premium marketing copy with AI.**
 
 A polished, production-ready AI writing tool built with Next.js 14, TypeScript,
-Tailwind CSS, and the Anthropic Claude API.
+Tailwind CSS, and the **free** Google Gemini API.
 
 [Live Demo](#) · [Report Bug](#) · [Request Feature](#)
 
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
 ![Tailwind](https://img.shields.io/badge/Tailwind-3-38bdf8?logo=tailwindcss)
-![Claude](https://img.shields.io/badge/Claude-API-d97757?logo=anthropic)
+![Gemini](https://img.shields.io/badge/Google-Gemini-4285F4?logo=google)
 
 </div>
 
@@ -61,7 +61,7 @@ smooth micro-interactions, skeleton loaders, and thoughtful empty states.
 | Styling      | [Tailwind CSS](https://tailwindcss.com/) + CSS variables  |
 | UI           | Custom shadcn-style components, [Lucide](https://lucide.dev/) icons |
 | Animation    | [Framer Motion](https://www.framer.com/motion/)           |
-| AI           | [Anthropic Claude](https://www.anthropic.com/) via official SDK |
+| AI           | [Google Gemini](https://ai.google.dev/) (free tier, REST)  |
 | Persistence  | localStorage (default) · [Supabase](https://supabase.com/) (optional) |
 | Toasts       | [Sonner](https://sonner.emilkowal.ski/)                   |
 
@@ -73,7 +73,7 @@ src/
 │   ├── page.tsx            # Landing page (animated hero, features, CTA)
 │   ├── studio/             # Core generation experience
 │   ├── library/            # Saved content, favorites, filters
-│   ├── api/generate/       # Validated server route → Claude
+│   ├── api/generate/       # Validated server route → Gemini
 │   ├── layout.tsx          # Theme provider + fonts + toaster
 │   └── globals.css         # Design tokens (light/dark)
 ├── components/
@@ -83,7 +83,7 @@ src/
 ├── hooks/
 │   └── use-library.ts      # Persistence store (Supabase-ready shape)
 └── lib/
-    ├── claude.ts           # AI integration + demo fallback
+    ├── ai.ts               # Gemini integration + demo fallback
     ├── content-types.ts    # Format definitions & prompt guidance
     ├── supabase.ts         # Browser client (null when unconfigured)
     └── utils.ts            # Helpers
@@ -122,8 +122,8 @@ All optional — the app runs in demo mode without them.
 
 | Variable                        | Purpose                                  |
 | ------------------------------- | ---------------------------------------- |
-| `ANTHROPIC_API_KEY`             | Enables real AI generation               |
-| `ANTHROPIC_MODEL`               | Override the Claude model (optional)      |
+| `GEMINI_API_KEY`                | Enables real AI generation (free tier)   |
+| `GEMINI_MODEL`                  | Override the Gemini model (optional)      |
 | `NEXT_PUBLIC_SUPABASE_URL`      | Enables cloud library (optional)          |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (optional)              |
 
@@ -133,7 +133,7 @@ Deploy to [Vercel](https://vercel.com/) in two minutes:
 
 1. Push this repo to GitHub.
 2. Import it in Vercel.
-3. Add `ANTHROPIC_API_KEY` (and Supabase keys if desired) in **Settings →
+3. Add `GEMINI_API_KEY` (and Supabase keys if desired) in **Settings →
    Environment Variables**.
 4. Deploy. ✅
 

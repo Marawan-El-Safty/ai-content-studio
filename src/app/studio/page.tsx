@@ -60,7 +60,7 @@ export default function StudioPage() {
       setResults(data.variations);
       if (data.demo) {
         toast.info("Demo mode", {
-          description: "Add ANTHROPIC_API_KEY in .env.local for real AI output.",
+          description: "Add a free GEMINI_API_KEY in .env.local for real AI output.",
         });
       }
     } catch (e) {
