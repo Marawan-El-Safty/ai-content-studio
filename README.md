@@ -7,7 +7,7 @@
 A polished, production-ready copywriting tool built with Next.js 14, TypeScript,
 and Tailwind CSS. **Runs 100% free — no API key, no billing, no signup.**
 
-[Live Demo](#) · [Report Bug](#) · [Request Feature](#)
+**[🔗 Live Demo](https://ai-content-studio-navy-one.vercel.app)** · [Report Bug](https://github.com/Marawan-El-Safty/ai-content-studio/issues) · [Request Feature](https://github.com/Marawan-El-Safty/ai-content-studio/issues)
 
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
