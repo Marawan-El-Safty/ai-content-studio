@@ -9,7 +9,7 @@ export function isSupabaseConfigured() {
 
 /**
  * Browser Supabase client. Returns null when env vars are absent so
- * callers can transparently fall back to localStorage (demo mode).
+ * callers can transparently fall back to localStorage.
  */
 export function getSupabaseBrowserClient() {
   if (!isSupabaseConfigured()) return null;

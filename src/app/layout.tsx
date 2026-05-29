@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: "AI Content Studio — Generate premium marketing copy",
   description:
     "Generate, refine, and organize high-converting marketing copy with AI. Ad copy, emails, landing pages, social posts and more.",
-  keywords: ["AI copywriting", "marketing copy", "Gemini", "content generator"],
+  keywords: ["AI copywriting", "marketing copy", "copy generator", "content"],
   authors: [{ name: "Marawan Elsafty" }],
   openGraph: {
     title: "AI Content Studio",

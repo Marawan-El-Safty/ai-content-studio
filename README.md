@@ -4,15 +4,15 @@
 
 **Generate, refine, and organize premium marketing copy with AI.**
 
-A polished, production-ready AI writing tool built with Next.js 14, TypeScript,
-Tailwind CSS, and the **free** Google Gemini API.
+A polished, production-ready copywriting tool built with Next.js 14, TypeScript,
+and Tailwind CSS. **Runs 100% free — no API key, no billing, no signup.**
 
 [Live Demo](#) · [Report Bug](#) · [Request Feature](#)
 
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
 ![Tailwind](https://img.shields.io/badge/Tailwind-3-38bdf8?logo=tailwindcss)
-![Gemini](https://img.shields.io/badge/Google-Gemini-4285F4?logo=google)
+![No API Key](https://img.shields.io/badge/Runs-100%25%20Free-22c55e)
 
 </div>
 
@@ -46,8 +46,8 @@ smooth micro-interactions, skeleton loaders, and thoughtful empty states.
 - **Tone & length control** — Professional, Friendly, Bold, Playful, Luxury, Technical.
 - **Multiple variations** — generate up to 3 options per request and compare.
 - **Content library** — save, favorite, copy, and delete pieces.
-- **Graceful demo mode** — runs with zero config; returns realistic mock copy
-  until you add an API key, so the UI is always demoable.
+- **Zero-config & free** — a local copywriting engine generates everything
+  in-process. No API keys, no billing, no rate limits, works offline.
 - **Dark mode** — system-aware, persisted, no flash on load.
 - **Type-safe end to end** — strict TypeScript, validated API route.
 - **Accessible & responsive** — keyboard-friendly, mobile-first layout.
@@ -61,7 +61,7 @@ smooth micro-interactions, skeleton loaders, and thoughtful empty states.
 | Styling      | [Tailwind CSS](https://tailwindcss.com/) + CSS variables  |
 | UI           | Custom shadcn-style components, [Lucide](https://lucide.dev/) icons |
 | Animation    | [Framer Motion](https://www.framer.com/motion/)           |
-| AI           | [Google Gemini](https://ai.google.dev/) (free tier, REST)  |
+| Engine       | Local tone/format-aware copy engine (no external API)      |
 | Persistence  | localStorage (default) · [Supabase](https://supabase.com/) (optional) |
 | Toasts       | [Sonner](https://sonner.emilkowal.ski/)                   |
 
@@ -73,7 +73,7 @@ src/
 │   ├── page.tsx            # Landing page (animated hero, features, CTA)
 │   ├── studio/             # Core generation experience
 │   ├── library/            # Saved content, favorites, filters
-│   ├── api/generate/       # Validated server route → Gemini
+│   ├── api/generate/       # Validated server route → engine
 │   ├── layout.tsx          # Theme provider + fonts + toaster
 │   └── globals.css         # Design tokens (light/dark)
 ├── components/
@@ -83,7 +83,7 @@ src/
 ├── hooks/
 │   └── use-library.ts      # Persistence store (Supabase-ready shape)
 └── lib/
-    ├── ai.ts               # Gemini integration + demo fallback
+    ├── ai.ts               # Local copywriting engine (tone/format aware)
     ├── content-types.ts    # Format definitions & prompt guidance
     ├── supabase.ts         # Browser client (null when unconfigured)
     └── utils.ts            # Helpers
@@ -91,10 +91,14 @@ src/
 
 **Design decisions worth noting**
 
-- **Demo-first**: every integration degrades gracefully so the app never shows a
-  broken screen — ideal for a portfolio link.
-- **Separation of concerns**: prompt logic lives in `lib/`, UI never talks to the
-  AI SDK directly — it goes through a validated `/api/generate` route.
+- **Zero-dependency generation**: the copy engine runs in-process, so the app is
+  free to host anywhere and never shows a broken screen — ideal for a live
+  portfolio link.
+- **LLM-swappable by design**: `lib/ai.ts` exposes the same async `generateCopy`
+  contract an LLM would. Dropping in a hosted model later is a single-file change;
+  the UI and API route stay untouched.
+- **Separation of concerns**: generation logic lives in `lib/`; the UI never
+  generates directly — it goes through a validated `/api/generate` route.
 - **Drop-in Supabase**: the library store shape matches `supabase/schema.sql`, so
   swapping localStorage for an authenticated cloud table is a contained change.
 
@@ -110,20 +114,18 @@ src/
 git clone https://github.com/<your-username>/ai-content-studio.git
 cd ai-content-studio
 npm install
-cp .env.example .env.local   # optional — app runs without keys
-npm run dev
+npm run dev   # that's it — no API keys required
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
 ### Environment variables
 
-All optional — the app runs in demo mode without them.
+**None required.** The app is fully functional out of the box. The only
+variables are optional and enable cloud persistence:
 
 | Variable                        | Purpose                                  |
 | ------------------------------- | ---------------------------------------- |
-| `GEMINI_API_KEY`                | Enables real AI generation (free tier)   |
-| `GEMINI_MODEL`                  | Override the Gemini model (optional)      |
 | `NEXT_PUBLIC_SUPABASE_URL`      | Enables cloud library (optional)          |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (optional)              |
 
@@ -133,9 +135,8 @@ Deploy to [Vercel](https://vercel.com/) in two minutes:
 
 1. Push this repo to GitHub.
 2. Import it in Vercel.
-3. Add `GEMINI_API_KEY` (and Supabase keys if desired) in **Settings →
-   Environment Variables**.
-4. Deploy. ✅
+3. Deploy. ✅ (No environment variables needed — add Supabase keys only if you
+   want the optional cloud library.)
 
 For cloud persistence, create a Supabase project and run
 [`supabase/schema.sql`](./supabase/schema.sql) in the SQL editor.

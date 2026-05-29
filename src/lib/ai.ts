@@ -8,99 +8,202 @@ export interface GenerateParams {
   variations: number;
 }
 
-const LENGTH_HINT: Record<Length, string> = {
-  Short: "Keep it very concise — every word earns its place.",
-  Medium: "Use a balanced, moderate length.",
-  Long: "Be thorough and expansive while staying engaging.",
+/**
+ * Local copywriting engine — no external API, no keys, no billing.
+ *
+ * Generates varied, tone- and format-aware marketing copy entirely
+ * in-process. This keeps the app free to run and deploy anywhere
+ * (including static/free hosting) with zero configuration.
+ *
+ * The module deliberately mirrors the shape an LLM integration would
+ * use (async `generateCopy` returning variations), so swapping in a
+ * hosted model later is a contained change in this one file.
+ */
+
+// ── Tone vocabularies ────────────────────────────────────────────
+const TONE_PROFILE: Record<
+  Tone,
+  {
+    hooks: string[];
+    connectors: string[];
+    ctas: string[];
+    adjectives: string[];
+  }
+> = {
+  Professional: {
+    hooks: [
+      "Streamline how your team handles",
+      "A smarter, more reliable approach to",
+      "Bring clarity and control to",
+    ],
+    connectors: [
+      "Built for teams that value precision",
+      "Designed to scale with your workflow",
+      "Trusted where results matter",
+    ],
+    ctas: ["Request a demo", "Get started today", "See how it works"],
+    adjectives: ["efficient", "reliable", "scalable", "proven"],
+  },
+  Friendly: {
+    hooks: [
+      "Say hello to an easier way to handle",
+      "We made",
+      "Good news for anyone tired of",
+    ],
+    connectors: [
+      "It just works — no headaches, no learning curve",
+      "Thousands of happy users already made the switch",
+      "Simple enough for day one, powerful enough for year three",
+    ],
+    ctas: ["Try it free", "Join us today", "Give it a go"],
+    adjectives: ["simple", "delightful", "effortless", "friendly"],
+  },
+  Bold: {
+    hooks: [
+      "Stop wasting time on",
+      "Forget everything you know about",
+      "It's time to dominate",
+    ],
+    connectors: [
+      "No fluff. No friction. Just results",
+      "The competition won't see it coming",
+      "This is how winners handle it",
+    ],
+    ctas: ["Start now", "Claim your edge", "Take control"],
+    adjectives: ["unstoppable", "game-changing", "relentless", "powerful"],
+  },
+  Playful: {
+    hooks: [
+      "Plot twist: handling",
+      "Warning — you might actually enjoy",
+      "Who said",
+    ],
+    connectors: [
+      "It's almost unfair how easy this is",
+      "Less grind, more high-fives",
+      "Your future self is already thanking you",
+    ],
+    ctas: ["Let's go", "Jump in", "Try the magic"],
+    adjectives: ["ridiculously easy", "fun", "clever", "addictive"],
+  },
+  Luxury: {
+    hooks: [
+      "Experience a refined approach to",
+      "Elevate the way you handle",
+      "For those who expect more from",
+    ],
+    connectors: [
+      "Crafted for those who appreciate the details",
+      "Quietly powerful, beautifully simple",
+      "Where performance meets elegance",
+    ],
+    ctas: ["Discover more", "Begin your experience", "Request access"],
+    adjectives: ["refined", "premium", "elegant", "exceptional"],
+  },
+  Technical: {
+    hooks: [
+      "Automate and optimize",
+      "Ship faster with a robust approach to",
+      "Cut overhead from",
+    ],
+    connectors: [
+      "Fully typed, well-documented, and battle-tested",
+      "Integrates cleanly with your existing stack",
+      "Observable, secure, and built to scale",
+    ],
+    ctas: ["Read the docs", "Start building", "View the API"],
+    adjectives: ["robust", "performant", "secure", "extensible"],
+  },
 };
 
-/** Free Google Gemini model — no billing required on the free tier. */
-const DEFAULT_MODEL = "gemini-2.0-flash";
-
-export function isAiConfigured() {
-  return Boolean(process.env.GEMINI_API_KEY);
-}
-
-function buildPrompt(p: GenerateParams) {
-  const type = getContentType(p.contentTypeId);
-  return [
-    `You are an elite direct-response copywriter.`,
-    `Task: ${type.guidance}`,
-    `Tone: ${p.tone}.`,
-    LENGTH_HINT[p.length],
-    `Product / brief: """${p.brief}"""`,
-    ``,
-    `Produce exactly ${p.variations} distinct variation(s).`,
-    `Return ONLY a JSON array of strings, no commentary, no markdown fences.`,
-    `Each array item is one complete variation (may contain line breaks).`,
-  ].join("\n");
-}
-
-/** Strip accidental code fences and parse the model's JSON array. */
-function parseVariations(raw: string, fallbackCount: number): string[] {
-  let text = raw.trim();
-  text = text.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
-  try {
-    const parsed = JSON.parse(text);
-    if (Array.isArray(parsed)) {
-      return parsed.map((v) => String(v).trim()).filter(Boolean);
-    }
-  } catch {
-    // Fall back to treating the whole response as one variation.
+// ── Deterministic-but-varied pseudo random ───────────────────────
+function seeded(seed: string) {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
   }
-  return [text].slice(0, fallbackCount);
+  return () => {
+    h += 0x6d2b79f5;
+    let t = h;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function pick<T>(rng: () => number, arr: T[]) {
+  return arr[Math.floor(rng() * arr.length)];
+}
+
+/** Tidy the brief into a lowercase subject phrase. */
+function subjectOf(brief: string, fallback: string) {
+  const s = brief.trim().replace(/[.!?]+$/, "");
+  return (s || fallback).toLowerCase();
+}
+
+/** Capitalize first letter. */
+function cap(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function buildVariation(p: GenerateParams, seedIndex: number): string {
+  const type = getContentType(p.contentTypeId);
+  const profile = TONE_PROFILE[p.tone];
+  const subject = subjectOf(p.brief, type.placeholder);
+  const rng = seeded(`${p.brief}|${p.tone}|${p.length}|${type.id}|${seedIndex}`);
+
+  const hook = pick(rng, profile.hooks);
+  const connector = pick(rng, profile.connectors);
+  const cta = pick(rng, profile.ctas);
+  const adj = pick(rng, profile.adjectives);
+  const adj2 = pick(rng, profile.adjectives);
+
+  const longTail =
+    p.length === "Long"
+      ? ` ${connector}. Whether you're just getting started or scaling fast, it adapts to you — not the other way around.`
+      : p.length === "Medium"
+        ? ` ${connector}.`
+        : "";
+
+  switch (type.id) {
+    case "ad":
+      return `${hook} ${subject}.\n\n${cap(adj)} by design and ${adj2} where it counts.${longTail}\n\n👉 ${cta}`;
+
+    case "email": {
+      const subjectLine = `${cap(adj)} ${subject} — without the busywork`;
+      return `Subject: ${subjectLine}\n\nHi there,\n\n${cap(hook)} ${subject}. ${cap(connector)}.${longTail}\n\n${cta} →\n\nCheers,\nThe Team`;
+    }
+
+    case "landing":
+      return `${cap(adj)} ${subject}, finally simple.\n\n${cap(connector)}.${longTail}\n\n• ${cap(adj)} from day one\n• ${cap(adj2)} at any scale\n• Set up in minutes, not weeks\n\n[ ${cta} ]`;
+
+    case "social":
+      return `${cap(hook)} ${subject}. 🚀\n\n${cap(connector)}.\n\nThe best part? It's ${adj}.${longTail}\n\n${cta} 👇`;
+
+    case "blog":
+      return `${cap(hook)} ${subject}? You're not alone.\n\nMost people settle for clunky, time-consuming workarounds — and quietly accept the cost. But it doesn't have to be that way.\n\nIn this post, we'll break down a ${adj}, ${adj2} approach that changes the game.${longTail}`;
+
+    case "pitch":
+      return `${cap(subject)} is broken — it's slow, manual, and expensive.\n\nWe fix that with a ${adj}, ${adj2} solution that ${connector.toLowerCase()}. ${longTail}\n\nThe timing has never been better. ${cta}.`;
+
+    default:
+      return `${cap(hook)} ${subject}. ${cap(connector)}. ${cta}.`;
+  }
 }
 
 /**
- * Generate marketing copy with Google Gemini (free tier). Falls back to
- * high-quality mock output when no API key is present so the app stays
- * fully demoable with zero configuration.
+ * Generate marketing copy locally. Always succeeds — no network, no key.
  */
 export async function generateCopy(p: GenerateParams): Promise<{
   variations: string[];
   demo: boolean;
 }> {
-  if (!isAiConfigured()) {
-    return { variations: mockVariations(p), demo: true };
-  }
-
-  const model = process.env.GEMINI_MODEL || DEFAULT_MODEL;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: buildPrompt(p) }] }],
-      generationConfig: { temperature: 0.9, maxOutputTokens: 1500 },
-    }),
-  });
-
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(`Gemini API error ${res.status}: ${detail.slice(0, 300)}`);
-  }
-
-  const data = await res.json();
-  const raw: string =
-    data?.candidates?.[0]?.content?.parts
-      ?.map((part: { text?: string }) => part.text ?? "")
-      .join("") ?? "";
-
-  return { variations: parseVariations(raw, p.variations), demo: false };
-}
-
-/** Deterministic, realistic placeholder output for demo mode. */
-function mockVariations(p: GenerateParams): string[] {
-  const type = getContentType(p.contentTypeId);
-  const subject = p.brief || type.placeholder;
-  const base = [
-    `Stop wrestling with ${subject.toLowerCase()}. There's a faster way — and it starts in under 60 seconds.`,
-    `Meet the smarter approach to ${subject.toLowerCase()}. Built for teams who'd rather ship than struggle.`,
-    `What if ${subject.toLowerCase()} just… worked? Thousands already made the switch. Your turn.`,
-  ];
-  return base.slice(0, Math.max(1, p.variations)).map(
-    (line) =>
-      `${line}\n\n[Demo mode — add your free GEMINI_API_KEY in .env.local for real ${p.tone.toLowerCase()} ${type.label.toLowerCase()}.]`,
+  const count = Math.min(3, Math.max(1, p.variations));
+  // Small artificial delay so the UI's loading state is perceptible.
+  await new Promise((r) => setTimeout(r, 350));
+  const variations = Array.from({ length: count }, (_, i) =>
+    buildVariation(p, i),
   );
+  return { variations, demo: false };
 }

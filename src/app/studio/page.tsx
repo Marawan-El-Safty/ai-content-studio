@@ -58,11 +58,6 @@ export default function StudioPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Generation failed.");
       setResults(data.variations);
-      if (data.demo) {
-        toast.info("Demo mode", {
-          description: "Add a free GEMINI_API_KEY in .env.local for real AI output.",
-        });
-      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
