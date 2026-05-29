@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 8%;
+    --primary: 252 80% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 12%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 252 60% 96%;
+    --accent-foreground: 252 80% 40%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 252 80% 60%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 240 10% 5%;
+    --foreground: 0 0% 98%;
+    --card: 240 8% 8%;
+    --card-foreground: 0 0% 98%;
+    --primary: 252 85% 67%;
+    --primary-foreground: 240 10% 5%;
+    --secondary: 240 5% 14%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 5% 14%;
+    --muted-foreground: 240 5% 60%;
+    --accent: 252 40% 18%;
+    --accent-foreground: 252 85% 80%;
+    --border: 240 5% 16%;
+    --input: 240 5% 18%;
+    --ring: 252 85% 67%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Ambient gradient backdrop used on hero + studio. */
+.bg-aurora {
+  background-image:
+    radial-gradient(45rem 45rem at 80% -10%, hsl(252 80% 60% / 0.12), transparent),
+    radial-gradient(35rem 35rem at 0% 20%, hsl(190 80% 55% / 0.1), transparent);
+}
+
+/* Skeleton shimmer */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    hsl(var(--foreground) / 0.06),
+    transparent
+  );
+  animation: shimmer 1.6s infinite;
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
